@@ -3,6 +3,10 @@ package postgres
 import (
 	"context"
 
+	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2"
+	trmmanager "github.com/avito-tech/go-transaction-manager/trm/v2/manager"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/settings"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -18,47 +22,48 @@ type Executor interface {
 	CopyFrom(ctx context.Context, tableName pgx.Identifier, columnNames []string, rowSrc pgx.CopyFromSource) (int64, error)
 }
 
-type txKey struct{}
-
 type Transactor struct {
-	pool *pgxpool.Pool
+	trManager *trmmanager.Manager
+	getter    *trmpgx.CtxGetter
+	pool      *pgxpool.Pool
 }
 
 func NewTransactor(pool *pgxpool.Pool) *Transactor {
-	return &Transactor{pool: pool}
+	return &Transactor{
+		trManager: trmmanager.Must(trmpgx.NewDefaultFactory(pool)),
+		getter:    trmpgx.DefaultCtxGetter,
+		pool:      pool,
+	}
 }
 
 // RunInTransaction executes fn inside a transaction. If ctx already carries
-// an active transaction, fn reuses it — no nested Begin, no savepoint.
+// an active transaction, it's reused (default PropagationRequired) — no
+// nested Begin, no savepoint. Use RunInNestedTransaction for that.
 func (t *Transactor) RunInTransaction(
 	ctx context.Context,
 	retryer port.Retryer,
 	fn func(ctx context.Context) error,
 ) error {
-	// For nested transactions.
-	if _, ok := ctx.Value(txKey{}).(pgx.Tx); ok {
-		return fn(ctx)
-	}
-
-	// Starting a transaction with repeats.
 	return retryer.Do(ctx, func() error {
-		tx, err := t.pool.Begin(ctx)
-		if err != nil {
-			return err
-		}
-		defer tx.Rollback(ctx)
+		return t.trManager.Do(ctx, fn)
+	})
+}
 
-		if err := fn(context.WithValue(ctx, txKey{}, tx)); err != nil {
-			return err
-		}
-		return tx.Commit(ctx)
+// RunInNestedTransaction executes fn in a real nested transaction (SAVEPOINT)
+// when ctx already carries an active transaction — the inner part can roll
+// back independently of the outer one.
+func (t *Transactor) RunInNestedTransaction(
+	ctx context.Context,
+	retryer port.Retryer,
+	fn func(ctx context.Context) error,
+) error {
+	s := settings.Must(settings.WithPropagation(trm.PropagationNested))
+	return retryer.Do(ctx, func() error {
+		return t.trManager.DoWithSettings(ctx, s, fn)
 	})
 }
 
 // Returns an existing transaction or connection pool.
 func (t *Transactor) GetExecutor(ctx context.Context) Executor {
-	if tx, ok := ctx.Value(txKey{}).(pgx.Tx); ok {
-		return tx
-	}
-	return t.pool
+	return t.getter.DefaultTrOrDB(ctx, t.pool)
 }
