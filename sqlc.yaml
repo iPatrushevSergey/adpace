@@ -1,0 +1,34 @@
+version: "2"
+sql:
+  - schema:
+      - "migrations/campaign/20260913221500_advertiser.sql"
+      - "migrations/campaign/20260913222100_campaign.sql"
+      - "migrations/campaign/20260913223000_ad_group.sql"
+    queries: "app/internal/campaign/adapter/repository/postgres/queries"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "sqlcgen"
+        out: "app/internal/campaign/adapter/repository/postgres/sqlcgen"
+        sql_package: "pgx/v5"
+        emit_json_tags: false
+        overrides:
+          - db_type: "timestamptz"
+            nullable: false
+            go_type:
+              type: "time.Time"
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              package: "uuid"
+              type: "UUID"
+  # - schema:
+  #     - "migrations/campaign/20260913222100_campaign.sql"
+  #     - "migrations/budget/20260913224600_processed_event.sql"
+  #   queries: "app/internal/budget/adapter/repository/postgres/queries"
+  #   engine: "postgresql"
+  #   gen:
+  #     go:
+  #       package: "sqlcgen"
+  #       out: "app/internal/budget/adapter/repository/postgres/sqlcgen"
+  #       sql_package: "pgx/v5"
