@@ -33,7 +33,7 @@ func (uc *CreateAdvertiser) Execute(ctx context.Context, in dto.CreateAdvertiser
 	}
 	now := uc.clock.Now()
 
-	advertiser, err := entity.NewAdvertiser(id, in.Name, in.Country, now, entity.WithCreatedAt(now))
+	advertiser, err := entity.NewAdvertiser(id, in.Name, in.Country, now, entity.WithAdvertiserCreatedAt(now))
 	if err != nil {
 		return entity.Advertiser{}, err
 	}

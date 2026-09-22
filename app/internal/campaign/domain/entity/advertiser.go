@@ -43,7 +43,7 @@ func NewAdvertiser(
 	return a, nil
 }
 
-func WithCreatedAt(t time.Time) AdvertiserOption {
+func WithAdvertiserCreatedAt(t time.Time) AdvertiserOption {
 	return func(a *Advertiser) { a.CreatedAt = t }
 }
 
