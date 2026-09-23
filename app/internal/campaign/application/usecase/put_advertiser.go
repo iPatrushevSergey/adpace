@@ -35,7 +35,7 @@ func (uc *PutAdvertiser) Execute(ctx context.Context, in dto.PutAdvertiserInput)
 		return struct{}{}, err
 	}
 
-	if err := uc.advertiserRepo.Put(ctx, advertiser); err != nil {
+	if err := uc.advertiserRepo.Save(ctx, advertiser); err != nil {
 		return struct{}{}, err
 	}
 	return struct{}{}, nil
