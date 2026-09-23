@@ -39,27 +39,18 @@ func NewCampaign(
 	updatedAt time.Time,
 	opts ...CampaignOption,
 ) (Campaign, error) {
-	if name == "" {
-		return Campaign{}, fmt.Errorf("%w: name cannot be empty", domain.ErrBadInput)
-	}
-	if budgetTotal <= 0 {
-		return Campaign{}, fmt.Errorf("%w: budget_total must be positive", domain.ErrBadInput)
-	}
-	if budgetDaily <= 0 {
-		return Campaign{}, fmt.Errorf("%w: budget_daily must be positive", domain.ErrBadInput)
-	}
-	if budgetDaily > budgetTotal {
-		return Campaign{}, fmt.Errorf("%w: budget_daily must not exceed budget_total", domain.ErrBadInput)
-	}
-
 	c := Campaign{
 		CampaignID:   campaignID,
 		AdvertiserID: advertiserID,
-		Name:         name,
-		BudgetTotal:  budgetTotal,
-		BudgetDaily:  budgetDaily,
 		Status:       CampaignStatusActive,
 		UpdatedAt:    updatedAt,
+	}
+
+	if err := c.SetName(&name); err != nil {
+		return Campaign{}, err
+	}
+	if err := c.SetBudgets(&budgetTotal, &budgetDaily); err != nil {
+		return Campaign{}, err
 	}
 
 	for _, opt := range opts {
@@ -72,29 +63,52 @@ func WithCampaignCreatedAt(t time.Time) CampaignOption {
 	return func(c *Campaign) { c.CreatedAt = t }
 }
 
-// Pause moves the campaign to paused state.
-func (c *Campaign) Pause(reason string, updatedAt time.Time) error {
-	if !IsValidPauseReason(reason) {
-		return fmt.Errorf("%w: invalid pause reason %q", domain.ErrBadInput, reason)
+func (c *Campaign) SetName(name *string) error {
+	if name == nil {
+		return nil
 	}
-	if c.Status == CampaignStatusPaused {
-		return fmt.Errorf("%w: campaign already paused", domain.ErrConflict)
+	if !IsValidCampaignName(*name) {
+		return fmt.Errorf("%w: name cannot be empty", domain.ErrBadInput)
 	}
-	c.Status = CampaignStatusPaused
-	c.PauseReason = &reason
-	c.UpdatedAt = updatedAt
+	c.Name = *name
 	return nil
 }
 
-// Resume moves the campaign back to active state.
-func (c *Campaign) Resume(updatedAt time.Time) error {
-	if c.Status == CampaignStatusActive {
-		return fmt.Errorf("%w: campaign already active", domain.ErrConflict)
+func (c *Campaign) SetBudgets(total, daily *int64) error {
+	newTotal := c.BudgetTotal
+	if total != nil {
+		newTotal = *total
 	}
-	c.Status = CampaignStatusActive
-	c.PauseReason = nil
-	c.UpdatedAt = updatedAt
+	newDaily := c.BudgetDaily
+	if daily != nil {
+		newDaily = *daily
+	}
+
+	if !IsValidBudget(newTotal) {
+		return fmt.Errorf("%w: budget_total must be positive", domain.ErrBadInput)
+	}
+	if !IsValidBudget(newDaily) {
+		return fmt.Errorf("%w: budget_daily must be positive", domain.ErrBadInput)
+	}
+	if !IsValidBudgetPair(newDaily, newTotal) {
+		return fmt.Errorf("%w: budget_daily must not exceed budget_total", domain.ErrBadInput)
+	}
+
+	c.BudgetTotal = newTotal
+	c.BudgetDaily = newDaily
 	return nil
+}
+
+func IsValidCampaignName(name string) bool {
+	return name != ""
+}
+
+func IsValidBudget(amount int64) bool {
+	return amount > 0
+}
+
+func IsValidBudgetPair(daily, total int64) bool {
+	return daily <= total
 }
 
 func IsValidPauseReason(reason string) bool {
