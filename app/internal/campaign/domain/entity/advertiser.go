@@ -23,18 +23,16 @@ func NewAdvertiser(
 	updatedAt time.Time,
 	opts ...AdvertiserOption,
 ) (Advertiser, error) {
-	if name == "" {
-		return Advertiser{}, fmt.Errorf("%w: name cannot be empty", domain.ErrBadInput)
-	}
-	if !IsValidCountry(country) {
-		return Advertiser{}, fmt.Errorf("%w: invalid country %q", domain.ErrBadInput, country)
-	}
-
 	a := Advertiser{
 		AdvertiserID: advertiserID,
-		Name:         name,
-		Country:      country,
 		UpdatedAt:    updatedAt,
+	}
+
+	if err := a.SetName(&name); err != nil {
+		return Advertiser{}, err
+	}
+	if err := a.SetCountry(&country); err != nil {
+		return Advertiser{}, err
 	}
 
 	for _, opt := range opts {
@@ -45,6 +43,32 @@ func NewAdvertiser(
 
 func WithAdvertiserCreatedAt(t time.Time) AdvertiserOption {
 	return func(a *Advertiser) { a.CreatedAt = t }
+}
+
+func (a *Advertiser) SetName(name *string) error {
+	if name == nil {
+		return nil
+	}
+	if !IsValidName(*name) {
+		return fmt.Errorf("%w: name cannot be empty", domain.ErrBadInput)
+	}
+	a.Name = *name
+	return nil
+}
+
+func (a *Advertiser) SetCountry(country *string) error {
+	if country == nil {
+		return nil
+	}
+	if !IsValidCountry(*country) {
+		return fmt.Errorf("%w: invalid country %q", domain.ErrBadInput, *country)
+	}
+	a.Country = *country
+	return nil
+}
+
+func IsValidName(name string) bool {
+	return name != ""
 }
 
 func IsValidCountry(c string) bool {
