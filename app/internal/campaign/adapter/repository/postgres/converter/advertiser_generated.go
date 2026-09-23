@@ -32,15 +32,15 @@ func (c *AdvertiserConverterImpl) ToEntityAdvertiser(source sqlcgen.Advertiser) 
 	entityAdvertiser.UpdatedAt = CopyTime(source.UpdatedAt)
 	return entityAdvertiser
 }
-func (c *AdvertiserConverterImpl) ToPutParams(source entity.Advertiser) (sqlcgen.PutParams, error) {
-	var sqlcgenPutParams sqlcgen.PutParams
+func (c *AdvertiserConverterImpl) ToSaveParams(source entity.Advertiser) (sqlcgen.SaveParams, error) {
+	var sqlcgenSaveParams sqlcgen.SaveParams
 	uuidUUID, err := StringToUUID(source.AdvertiserID)
 	if err != nil {
-		return sqlcgenPutParams, err
+		return sqlcgenSaveParams, err
 	}
-	sqlcgenPutParams.AdvertiserID = uuidUUID
-	sqlcgenPutParams.Name = source.Name
-	sqlcgenPutParams.Country = source.Country
-	sqlcgenPutParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenPutParams, nil
+	sqlcgenSaveParams.AdvertiserID = uuidUUID
+	sqlcgenSaveParams.Name = source.Name
+	sqlcgenSaveParams.Country = source.Country
+	sqlcgenSaveParams.UpdatedAt = CopyTime(source.UpdatedAt)
+	return sqlcgenSaveParams, nil
 }
