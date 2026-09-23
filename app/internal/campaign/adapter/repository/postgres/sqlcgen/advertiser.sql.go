@@ -73,22 +73,42 @@ func (q *Queries) GetByID(ctx context.Context, advertiserID uuid.UUID) (Advertis
 	return i, err
 }
 
-const put = `-- name: Put :one
+const getByIDForUpdate = `-- name: GetByIDForUpdate :one
+SELECT advertiser_id, name, country, created_at, updated_at
+FROM advertiser
+WHERE advertiser_id = $1
+FOR UPDATE
+`
+
+func (q *Queries) GetByIDForUpdate(ctx context.Context, advertiserID uuid.UUID) (Advertiser, error) {
+	row := q.db.QueryRow(ctx, getByIDForUpdate, advertiserID)
+	var i Advertiser
+	err := row.Scan(
+		&i.AdvertiserID,
+		&i.Name,
+		&i.Country,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const save = `-- name: Save :one
 UPDATE advertiser
 SET name = $2, country = $3, updated_at = $4
 WHERE advertiser_id = $1
 RETURNING advertiser_id, name, country, created_at, updated_at
 `
 
-type PutParams struct {
+type SaveParams struct {
 	AdvertiserID uuid.UUID
 	Name         string
 	Country      string
 	UpdatedAt    time.Time
 }
 
-func (q *Queries) Put(ctx context.Context, arg PutParams) (Advertiser, error) {
-	row := q.db.QueryRow(ctx, put,
+func (q *Queries) Save(ctx context.Context, arg SaveParams) (Advertiser, error) {
+	row := q.db.QueryRow(ctx, save,
 		arg.AdvertiserID,
 		arg.Name,
 		arg.Country,
