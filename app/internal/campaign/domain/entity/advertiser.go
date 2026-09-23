@@ -49,7 +49,7 @@ func (a *Advertiser) SetName(name *string) error {
 	if name == nil {
 		return nil
 	}
-	if !IsValidName(*name) {
+	if !IsValidAdvertiserName(*name) {
 		return fmt.Errorf("%w: name cannot be empty", domain.ErrBadInput)
 	}
 	a.Name = *name
@@ -67,7 +67,7 @@ func (a *Advertiser) SetCountry(country *string) error {
 	return nil
 }
 
-func IsValidName(name string) bool {
+func IsValidAdvertiserName(name string) bool {
 	return name != ""
 }
 
