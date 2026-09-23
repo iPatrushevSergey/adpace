@@ -58,7 +58,7 @@ func Run() (*App, []func(), error) {
 	uc := usecase.AdvertiserUseCases{
 		Create: usecase.NewCreateAdvertiser(advertiserRepo, idGen, clk),
 		Get:    usecase.NewGetByIDAdvertiser(advertiserRepo),
-		Patch:  usecase.NewPatchAdvertiser(advertiserRepo, clk),
+		Patch:  usecase.NewPatchAdvertiser(advertiserRepo, transactor, retryer, clk),
 		Put:    usecase.NewPutAdvertiser(advertiserRepo, clk),
 		Delete: usecase.NewDeleteAdvertiser(advertiserRepo),
 	}
