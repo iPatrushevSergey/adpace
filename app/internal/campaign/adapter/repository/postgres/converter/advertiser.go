@@ -16,5 +16,5 @@ import (
 type AdvertiserConverter interface {
 	ToEntityAdvertiser(source sqlcgen.Advertiser) entity.Advertiser
 	ToCreateParams(source entity.Advertiser) (sqlcgen.CreateParams, error)
-	ToPutParams(source entity.Advertiser) (sqlcgen.PutParams, error)
+	ToSaveParams(source entity.Advertiser) (sqlcgen.SaveParams, error)
 }
