@@ -10,18 +10,18 @@ import (
 
 type AdvertiserConverterImpl struct{}
 
-func (c *AdvertiserConverterImpl) ToCreateParams(source entity.Advertiser) (sqlcgen.CreateParams, error) {
-	var sqlcgenCreateParams sqlcgen.CreateParams
+func (c *AdvertiserConverterImpl) ToCreateAdvertiserParams(source entity.Advertiser) (sqlcgen.CreateAdvertiserParams, error) {
+	var sqlcgenCreateAdvertiserParams sqlcgen.CreateAdvertiserParams
 	uuidUUID, err := StringToUUID(source.AdvertiserID)
 	if err != nil {
-		return sqlcgenCreateParams, err
+		return sqlcgenCreateAdvertiserParams, err
 	}
-	sqlcgenCreateParams.AdvertiserID = uuidUUID
-	sqlcgenCreateParams.Name = source.Name
-	sqlcgenCreateParams.Country = source.Country
-	sqlcgenCreateParams.CreatedAt = CopyTime(source.CreatedAt)
-	sqlcgenCreateParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenCreateParams, nil
+	sqlcgenCreateAdvertiserParams.AdvertiserID = uuidUUID
+	sqlcgenCreateAdvertiserParams.Name = source.Name
+	sqlcgenCreateAdvertiserParams.Country = source.Country
+	sqlcgenCreateAdvertiserParams.CreatedAt = CopyTime(source.CreatedAt)
+	sqlcgenCreateAdvertiserParams.UpdatedAt = CopyTime(source.UpdatedAt)
+	return sqlcgenCreateAdvertiserParams, nil
 }
 func (c *AdvertiserConverterImpl) ToEntityAdvertiser(source sqlcgen.Advertiser) entity.Advertiser {
 	var entityAdvertiser entity.Advertiser
@@ -32,15 +32,15 @@ func (c *AdvertiserConverterImpl) ToEntityAdvertiser(source sqlcgen.Advertiser) 
 	entityAdvertiser.UpdatedAt = CopyTime(source.UpdatedAt)
 	return entityAdvertiser
 }
-func (c *AdvertiserConverterImpl) ToSaveParams(source entity.Advertiser) (sqlcgen.SaveParams, error) {
-	var sqlcgenSaveParams sqlcgen.SaveParams
+func (c *AdvertiserConverterImpl) ToSaveAdvertiserParams(source entity.Advertiser) (sqlcgen.SaveAdvertiserParams, error) {
+	var sqlcgenSaveAdvertiserParams sqlcgen.SaveAdvertiserParams
 	uuidUUID, err := StringToUUID(source.AdvertiserID)
 	if err != nil {
-		return sqlcgenSaveParams, err
+		return sqlcgenSaveAdvertiserParams, err
 	}
-	sqlcgenSaveParams.AdvertiserID = uuidUUID
-	sqlcgenSaveParams.Name = source.Name
-	sqlcgenSaveParams.Country = source.Country
-	sqlcgenSaveParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenSaveParams, nil
+	sqlcgenSaveAdvertiserParams.AdvertiserID = uuidUUID
+	sqlcgenSaveAdvertiserParams.Name = source.Name
+	sqlcgenSaveAdvertiserParams.Country = source.Country
+	sqlcgenSaveAdvertiserParams.UpdatedAt = CopyTime(source.UpdatedAt)
+	return sqlcgenSaveAdvertiserParams, nil
 }
