@@ -46,16 +46,18 @@ func Run() (*App, []func(), error) {
 	log.Info(context.Background(), "database connected")
 
 	transactor := postgres.NewTransactor(pool)
+	executor := postgres.NewExecutor(pool)
 	retryer := postgres.NewRetryer(
 		postgres.WithMaxRetries(cfg.DBRetry.MaxRetries),
 		postgres.WithExponentialBackoff(cfg.DBRetry.BaseDelay, cfg.DBRetry.MaxDelay),
 	)
 
-	advertiserRepo := campaignpostgres.NewAdvertiserRepo(transactor, retryer)
+	advertiserRepo := campaignpostgres.NewAdvertiserRepo(executor, retryer)
+	campaignRepo := campaignpostgres.NewCampaignRepo(executor, retryer)
 	idGen := generator.NewIDGenerator()
 	clk := clock.NewRealClock()
 
-	uc := usecase.AdvertiserUseCases{
+	advUC := usecase.AdvertiserUseCases{
 		Create: usecase.NewCreateAdvertiser(advertiserRepo, idGen, clk),
 		Get:    usecase.NewGetByIDAdvertiser(advertiserRepo),
 		Patch:  usecase.NewPatchAdvertiser(advertiserRepo, transactor, retryer, clk),
@@ -63,7 +65,17 @@ func Run() (*App, []func(), error) {
 		Delete: usecase.NewDeleteAdvertiser(advertiserRepo),
 	}
 
-	r := router.New(uc, log)
+	campUC := usecase.CampaignUseCases{
+		Create: usecase.NewCreateCampaign(campaignRepo, idGen, clk),
+		Get:    usecase.NewGetByIDCampaign(campaignRepo),
+		Patch:  usecase.NewPatchCampaign(campaignRepo, transactor, retryer, clk),
+		Put:    usecase.NewPutCampaign(campaignRepo, clk),
+		Delete: usecase.NewDeleteCampaign(campaignRepo),
+		Pause:  usecase.NewPauseCampaign(campaignRepo, clk),
+		Resume: usecase.NewResumeCampaign(campaignRepo, clk),
+	}
+
+	r := router.New(advUC, campUC, log)
 
 	srv := &http.Server{
 		Addr:    cfg.Server.Address,
