@@ -8,7 +8,6 @@ import (
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain/entity"
-	"github.com/iPatrushevSergey/adpace/app/internal/pkg/apputil"
 )
 
 type PatchCampaign struct {
@@ -33,9 +32,6 @@ func NewPatchCampaign(
 }
 
 func (uc *PatchCampaign) Execute(ctx context.Context, in dto.PatchCampaignInput) (out entity.Campaign, err error) {
-	if !apputil.IsUUID(in.CampaignID) {
-		return entity.Campaign{}, fmt.Errorf("%w: campaign id is not a valid UUID", domain.ErrBadInput)
-	}
 	if in.Name == nil && in.BudgetTotal == nil && in.BudgetDaily == nil {
 		return entity.Campaign{}, fmt.Errorf("%w: at least one field must be provided", domain.ErrBadInput)
 	}
