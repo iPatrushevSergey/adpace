@@ -7,14 +7,19 @@ import (
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/presentation/http/handler"
 )
 
-func New(uc usecase.AdvertiserUseCases, log appport.Logger) *gin.Engine {
+func New(
+	advUC usecase.AdvertiserUseCases,
+	camUC usecase.CampaignUseCases,
+	log appport.Logger,
+) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
 	public := r.Group("/api/v1")
 	protected := r.Group("/api/v1")
 
-	RegisterAdvertiserRoutes(public, protected, uc, log)
+	RegisterAdvertiserRoutes(public, protected, advUC, log)
+	RegisterCampaignRoutes(public, protected, camUC, log)
 
 	return r
 }
@@ -33,4 +38,21 @@ func RegisterAdvertiserRoutes(
 	advertisers.PATCH("/:advertiser_id", h.Patch)
 	advertisers.PUT("/:advertiser_id", h.Put)
 	advertisers.DELETE("/:advertiser_id", h.Delete)
+}
+
+func RegisterCampaignRoutes(
+	public, protected *gin.RouterGroup,
+	uc usecase.CampaignUseCases,
+	log appport.Logger,
+) {
+	h := handler.NewCampaignHandler(uc, log)
+
+	campaigns := protected.Group("/campaigns")
+	campaigns.POST("", h.Create)
+	campaigns.GET("/:campaign_id", h.Get)
+	campaigns.PATCH("/:campaign_id", h.Patch)
+	campaigns.PUT("/:campaign_id", h.Put)
+	campaigns.DELETE("/:campaign_id", h.Delete)
+	campaigns.POST("/:campaign_id/pause", h.Pause)
+	campaigns.POST("/:campaign_id/resume", h.Resume)
 }
