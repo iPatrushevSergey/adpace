@@ -37,9 +37,9 @@ type Campaign struct {
 	BudgetDaily  int64
 	SpendTotal   int64
 	SpendToday   int64
-	SpendDay     pgtype.Date
+	SpendDay     time.Time
 	Status       string
-	PauseReason  pgtype.Text
+	PauseReason  *string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
