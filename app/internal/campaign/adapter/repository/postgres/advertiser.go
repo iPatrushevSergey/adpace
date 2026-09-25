@@ -16,16 +16,16 @@ import (
 )
 
 type AdvertiserRepo struct {
-	transactor *postgres.Transactor
-	retryer    port.Retryer
-	conv       converter.AdvertiserConverter
+	executor *postgres.Executor
+	retryer  port.Retryer
+	conv     converter.AdvertiserConverter
 }
 
-func NewAdvertiserRepo(transactor *postgres.Transactor, retryer port.Retryer) *AdvertiserRepo {
+func NewAdvertiserRepo(executor *postgres.Executor, retryer port.Retryer) *AdvertiserRepo {
 	return &AdvertiserRepo{
-		transactor: transactor,
-		retryer:    retryer,
-		conv:       &converter.AdvertiserConverterImpl{},
+		executor: executor,
+		retryer:  retryer,
+		conv:     &converter.AdvertiserConverterImpl{},
 	}
 }
 
@@ -36,10 +36,9 @@ func (r *AdvertiserRepo) GetByID(ctx context.Context, advertiserID string) (enti
 	}
 
 	var m sqlcgen.Advertiser
-	err = r.retryer.Do(ctx, func() error {
-		q := sqlcgen.New(r.transactor.GetExecutor(ctx))
+	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = q.GetByID(ctx, id)
+		m, err = sqlcgen.New(q).GetAdvertiserByID(ctx, id)
 		return err
 	})
 	if err != nil {
@@ -58,10 +57,9 @@ func (r *AdvertiserRepo) GetByIDForUpdate(ctx context.Context, advertiserID stri
 	}
 
 	var m sqlcgen.Advertiser
-	err = r.retryer.Do(ctx, func() error {
-		q := sqlcgen.New(r.transactor.GetExecutor(ctx))
+	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = q.GetByIDForUpdate(ctx, id)
+		m, err = sqlcgen.New(q).GetAdvertiserByIDForUpdate(ctx, id)
 		return err
 	})
 	if err != nil {
@@ -74,16 +72,15 @@ func (r *AdvertiserRepo) GetByIDForUpdate(ctx context.Context, advertiserID stri
 }
 
 func (r *AdvertiserRepo) Create(ctx context.Context, advertiser entity.Advertiser) (entity.Advertiser, error) {
-	params, err := r.conv.ToCreateParams(advertiser)
+	params, err := r.conv.ToCreateAdvertiserParams(advertiser)
 	if err != nil {
 		return entity.Advertiser{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
 	}
 
 	var m sqlcgen.Advertiser
-	err = r.retryer.Do(ctx, func() error {
-		q := sqlcgen.New(r.transactor.GetExecutor(ctx))
+	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = q.Create(ctx, params)
+		m, err = sqlcgen.New(q).CreateAdvertiser(ctx, params)
 		return err
 	})
 	if err != nil {
@@ -93,14 +90,13 @@ func (r *AdvertiserRepo) Create(ctx context.Context, advertiser entity.Advertise
 }
 
 func (r *AdvertiserRepo) Save(ctx context.Context, advertiser entity.Advertiser) error {
-	params, err := r.conv.ToSaveParams(advertiser)
+	params, err := r.conv.ToSaveAdvertiserParams(advertiser)
 	if err != nil {
 		return fmt.Errorf("%w: %v", domain.ErrBadInput, err)
 	}
 
-	return r.retryer.Do(ctx, func() error {
-		q := sqlcgen.New(r.transactor.GetExecutor(ctx))
-		_, err := q.Save(ctx, params)
+	return r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+		_, err := sqlcgen.New(q).SaveAdvertiser(ctx, params)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.ErrNotFound
 		}
@@ -108,14 +104,13 @@ func (r *AdvertiserRepo) Save(ctx context.Context, advertiser entity.Advertiser)
 	})
 }
 
-func (r *AdvertiserRepo) Delete(ctx context.Context, advertiser string) error {
-	id, err := uuid.Parse(advertiser)
+func (r *AdvertiserRepo) Delete(ctx context.Context, advertiserID string) error {
+	id, err := uuid.Parse(advertiserID)
 	if err != nil {
 		return fmt.Errorf("%w: %v", domain.ErrBadInput, err)
 	}
 
-	return r.retryer.Do(ctx, func() error {
-		q := sqlcgen.New(r.transactor.GetExecutor(ctx))
-		return q.Delete(ctx, id)
+	return r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+		return sqlcgen.New(q).DeleteAdvertiser(ctx, id)
 	})
 }
