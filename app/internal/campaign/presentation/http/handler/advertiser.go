@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	appdto "github.com/iPatrushevSergey/adpace/app/internal/campaign/application/dto"
 	appport "github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/usecase"
@@ -54,10 +55,16 @@ func (h *AdvertiserHandler) Create(c *gin.Context) {
 }
 
 func (h *AdvertiserHandler) Get(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("advertiser_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	out, err := h.uc.Get.Execute(
 		c.Request.Context(),
 		appdto.GetAdvertiserInput{
-			AdvertiserID: c.Param("advertiser_id"),
+			AdvertiserID: id.String(),
 		},
 	)
 	if err != nil {
@@ -83,6 +90,12 @@ func (h *AdvertiserHandler) Get(c *gin.Context) {
 }
 
 func (h *AdvertiserHandler) Patch(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("advertiser_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	var req presdto.PatchAdvertiserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "invalid request"})
@@ -92,7 +105,7 @@ func (h *AdvertiserHandler) Patch(c *gin.Context) {
 	out, err := h.uc.Patch.Execute(
 		c.Request.Context(),
 		appdto.PatchAdvertiserInput{
-			AdvertiserID: c.Param("advertiser_id"),
+			AdvertiserID: id.String(),
 			Name:         req.Name,
 			Country:      req.Country,
 		},
@@ -120,16 +133,22 @@ func (h *AdvertiserHandler) Patch(c *gin.Context) {
 }
 
 func (h *AdvertiserHandler) Put(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("advertiser_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	var req presdto.PutAdvertiserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "invalid request"})
 		return
 	}
 
-	_, err := h.uc.Put.Execute(
+	_, err = h.uc.Put.Execute(
 		c.Request.Context(),
 		appdto.PutAdvertiserInput{
-			AdvertiserID: c.Param("advertiser_id"),
+			AdvertiserID: id.String(),
 			Name:         req.Name,
 			Country:      req.Country,
 		},
@@ -151,10 +170,16 @@ func (h *AdvertiserHandler) Put(c *gin.Context) {
 }
 
 func (h *AdvertiserHandler) Delete(c *gin.Context) {
-	_, err := h.uc.Delete.Execute(
+	id, err := uuid.Parse(c.Param("advertiser_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
+	_, err = h.uc.Delete.Execute(
 		c.Request.Context(),
 		appdto.DeleteAdvertiserInput{
-			AdvertiserID: c.Param("advertiser_id"),
+			AdvertiserID: id.String(),
 		},
 	)
 	if err != nil {
