@@ -12,13 +12,13 @@ import (
 	uuid "github.com/google/uuid"
 )
 
-const create = `-- name: Create :one
+const createAdvertiser = `-- name: CreateAdvertiser :one
 INSERT INTO advertiser (advertiser_id, name, country, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING advertiser_id, name, country, created_at, updated_at
 `
 
-type CreateParams struct {
+type CreateAdvertiserParams struct {
 	AdvertiserID uuid.UUID
 	Name         string
 	Country      string
@@ -26,8 +26,8 @@ type CreateParams struct {
 	UpdatedAt    time.Time
 }
 
-func (q *Queries) Create(ctx context.Context, arg CreateParams) (Advertiser, error) {
-	row := q.db.QueryRow(ctx, create,
+func (q *Queries) CreateAdvertiser(ctx context.Context, arg CreateAdvertiserParams) (Advertiser, error) {
+	row := q.db.QueryRow(ctx, createAdvertiser,
 		arg.AdvertiserID,
 		arg.Name,
 		arg.Country,
@@ -45,23 +45,23 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (Advertiser, err
 	return i, err
 }
 
-const delete = `-- name: Delete :exec
+const deleteAdvertiser = `-- name: DeleteAdvertiser :exec
 DELETE FROM advertiser WHERE advertiser_id = $1
 `
 
-func (q *Queries) Delete(ctx context.Context, advertiserID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, delete, advertiserID)
+func (q *Queries) DeleteAdvertiser(ctx context.Context, advertiserID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAdvertiser, advertiserID)
 	return err
 }
 
-const getByID = `-- name: GetByID :one
+const getAdvertiserByID = `-- name: GetAdvertiserByID :one
 SELECT advertiser_id, name, country, created_at, updated_at
 FROM advertiser
 WHERE advertiser_id = $1
 `
 
-func (q *Queries) GetByID(ctx context.Context, advertiserID uuid.UUID) (Advertiser, error) {
-	row := q.db.QueryRow(ctx, getByID, advertiserID)
+func (q *Queries) GetAdvertiserByID(ctx context.Context, advertiserID uuid.UUID) (Advertiser, error) {
+	row := q.db.QueryRow(ctx, getAdvertiserByID, advertiserID)
 	var i Advertiser
 	err := row.Scan(
 		&i.AdvertiserID,
@@ -73,15 +73,15 @@ func (q *Queries) GetByID(ctx context.Context, advertiserID uuid.UUID) (Advertis
 	return i, err
 }
 
-const getByIDForUpdate = `-- name: GetByIDForUpdate :one
+const getAdvertiserByIDForUpdate = `-- name: GetAdvertiserByIDForUpdate :one
 SELECT advertiser_id, name, country, created_at, updated_at
 FROM advertiser
 WHERE advertiser_id = $1
 FOR UPDATE
 `
 
-func (q *Queries) GetByIDForUpdate(ctx context.Context, advertiserID uuid.UUID) (Advertiser, error) {
-	row := q.db.QueryRow(ctx, getByIDForUpdate, advertiserID)
+func (q *Queries) GetAdvertiserByIDForUpdate(ctx context.Context, advertiserID uuid.UUID) (Advertiser, error) {
+	row := q.db.QueryRow(ctx, getAdvertiserByIDForUpdate, advertiserID)
 	var i Advertiser
 	err := row.Scan(
 		&i.AdvertiserID,
@@ -93,22 +93,22 @@ func (q *Queries) GetByIDForUpdate(ctx context.Context, advertiserID uuid.UUID) 
 	return i, err
 }
 
-const save = `-- name: Save :one
+const saveAdvertiser = `-- name: SaveAdvertiser :one
 UPDATE advertiser
 SET name = $2, country = $3, updated_at = $4
 WHERE advertiser_id = $1
 RETURNING advertiser_id, name, country, created_at, updated_at
 `
 
-type SaveParams struct {
+type SaveAdvertiserParams struct {
 	AdvertiserID uuid.UUID
 	Name         string
 	Country      string
 	UpdatedAt    time.Time
 }
 
-func (q *Queries) Save(ctx context.Context, arg SaveParams) (Advertiser, error) {
-	row := q.db.QueryRow(ctx, save,
+func (q *Queries) SaveAdvertiser(ctx context.Context, arg SaveAdvertiserParams) (Advertiser, error) {
+	row := q.db.QueryRow(ctx, saveAdvertiser,
 		arg.AdvertiserID,
 		arg.Name,
 		arg.Country,
