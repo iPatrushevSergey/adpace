@@ -5,9 +5,7 @@ import (
 
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/dto"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
-	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain/entity"
-	"github.com/iPatrushevSergey/adpace/app/internal/pkg/apputil"
 )
 
 type PutCampaign struct {
@@ -20,10 +18,6 @@ func NewPutCampaign(campaignRepo port.CampaignRepo, clock port.Clock) *PutCampai
 }
 
 func (uc *PutCampaign) Execute(ctx context.Context, in dto.PutCampaignInput) (struct{}, error) {
-	if !apputil.IsUUID(in.CampaignID) {
-		return struct{}{}, domain.ErrBadInput
-	}
-
 	// AdvertiserID intentionally not part of Put — ownership is immutable after Create.
 	campaign, err := entity.NewCampaign(
 		in.CampaignID,
