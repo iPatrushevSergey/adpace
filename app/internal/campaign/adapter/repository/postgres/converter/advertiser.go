@@ -15,6 +15,6 @@ import (
 // goverter:extend CopyTimePtr
 type AdvertiserConverter interface {
 	ToEntityAdvertiser(source sqlcgen.Advertiser) entity.Advertiser
-	ToCreateParams(source entity.Advertiser) (sqlcgen.CreateParams, error)
-	ToSaveParams(source entity.Advertiser) (sqlcgen.SaveParams, error)
+	ToCreateAdvertiserParams(source entity.Advertiser) (sqlcgen.CreateAdvertiserParams, error)
+	ToSaveAdvertiserParams(source entity.Advertiser) (sqlcgen.SaveAdvertiserParams, error)
 }
