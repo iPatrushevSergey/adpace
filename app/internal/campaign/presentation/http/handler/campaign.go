@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	appdto "github.com/iPatrushevSergey/adpace/app/internal/campaign/application/dto"
 	appport "github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/usecase"
@@ -62,10 +63,16 @@ func (h *CampaignHandler) Create(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Get(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("campaign_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	out, err := h.uc.Get.Execute(
 		c.Request.Context(),
 		appdto.GetCampaignInput{
-			CampaignID: c.Param("campaign_id"),
+			CampaignID: id.String(),
 		},
 	)
 	if err != nil {
@@ -97,6 +104,12 @@ func (h *CampaignHandler) Get(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Patch(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("campaign_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	var req presdto.PatchCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "invalid request"})
@@ -106,7 +119,7 @@ func (h *CampaignHandler) Patch(c *gin.Context) {
 	out, err := h.uc.Patch.Execute(
 		c.Request.Context(),
 		appdto.PatchCampaignInput{
-			CampaignID:  c.Param("campaign_id"),
+			CampaignID:  id.String(),
 			Name:        req.Name,
 			BudgetTotal: req.BudgetTotal,
 			BudgetDaily: req.BudgetDaily,
@@ -141,16 +154,22 @@ func (h *CampaignHandler) Patch(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Put(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("campaign_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	var req presdto.PutCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "invalid request"})
 		return
 	}
 
-	_, err := h.uc.Put.Execute(
+	_, err = h.uc.Put.Execute(
 		c.Request.Context(),
 		appdto.PutCampaignInput{
-			CampaignID:  c.Param("campaign_id"),
+			CampaignID:  id.String(),
 			Name:        req.Name,
 			BudgetTotal: req.BudgetTotal,
 			BudgetDaily: req.BudgetDaily,
@@ -173,10 +192,16 @@ func (h *CampaignHandler) Put(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Delete(c *gin.Context) {
-	_, err := h.uc.Delete.Execute(
+	id, err := uuid.Parse(c.Param("campaign_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
+	_, err = h.uc.Delete.Execute(
 		c.Request.Context(),
 		appdto.DeleteCampaignInput{
-			CampaignID: c.Param("campaign_id"),
+			CampaignID: id.String(),
 		},
 	)
 	if err != nil {
@@ -196,6 +221,12 @@ func (h *CampaignHandler) Delete(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Pause(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("campaign_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	var req presdto.PauseCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "invalid request"})
@@ -205,7 +236,7 @@ func (h *CampaignHandler) Pause(c *gin.Context) {
 	out, err := h.uc.Pause.Execute(
 		c.Request.Context(),
 		appdto.PauseCampaignInput{
-			CampaignID: c.Param("campaign_id"),
+			CampaignID: id.String(),
 			Reason:     req.Reason,
 		},
 	)
@@ -234,10 +265,16 @@ func (h *CampaignHandler) Pause(c *gin.Context) {
 }
 
 func (h *CampaignHandler) Resume(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("campaign_id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	out, err := h.uc.Resume.Execute(
 		c.Request.Context(),
 		appdto.ResumeCampaignInput{
-			CampaignID: c.Param("campaign_id"),
+			CampaignID: id.String(),
 		},
 	)
 	if err != nil {
