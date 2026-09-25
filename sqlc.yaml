@@ -22,6 +22,15 @@ sql:
               import: "github.com/google/uuid"
               package: "uuid"
               type: "UUID"
+          - db_type: "date"
+            nullable: false
+            go_type:
+              type: "time.Time"
+          - db_type: "text"
+            nullable: true
+            go_type:
+              type: "string"
+              pointer: true
   # - schema:
   #     - "migrations/campaign/20260913222100_campaign.sql"
   #     - "migrations/budget/20260913224600_processed_event.sql"
