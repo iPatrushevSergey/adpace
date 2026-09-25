@@ -8,7 +8,6 @@ import (
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain/entity"
-	"github.com/iPatrushevSergey/adpace/app/internal/pkg/apputil"
 )
 
 type PatchAdvertiser struct {
@@ -33,9 +32,6 @@ func NewPatchAdvertiser(
 }
 
 func (uc *PatchAdvertiser) Execute(ctx context.Context, in dto.PatchAdvertiserInput) (out entity.Advertiser, err error) {
-	if !apputil.IsUUID(in.AdvertiserID) {
-		return entity.Advertiser{}, fmt.Errorf("%w: advertiser id is not a valid UUID", domain.ErrBadInput)
-	}
 	if in.Name == nil && in.Country == nil {
 		return entity.Advertiser{}, fmt.Errorf("%w: at least one field must be provided", domain.ErrBadInput)
 	}
