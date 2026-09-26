@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
-	"github.com/iPatrushevSergey/adpace/app/internal/pkg/apputil"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -23,13 +22,16 @@ type retryOptions struct {
 	backoff    port.BackoffFunc
 }
 
+// RetryOption configures a Retryer.
+type RetryOption func(*retryOptions)
+
 // WithMaxRetries sets the maximum number of retry attempts.
-func WithMaxRetries(n int) apputil.Option[retryOptions] {
+func WithMaxRetries(n int) RetryOption {
 	return func(rc *retryOptions) { rc.maxRetries = n }
 }
 
 // WithExponentialBackoff sets exponential backoff with full jitter.
-func WithExponentialBackoff(base, max time.Duration) apputil.Option[retryOptions] {
+func WithExponentialBackoff(base, max time.Duration) RetryOption {
 	return func(rc *retryOptions) {
 		rc.backoff = func(attempt int) time.Duration {
 			delay := time.Duration(float64(base) * math.Pow(2, float64(attempt)))
@@ -45,12 +47,12 @@ func WithExponentialBackoff(base, max time.Duration) apputil.Option[retryOptions
 }
 
 // WithConstantBackoff sets a fixed delay between retries.
-func WithConstantBackoff(d time.Duration) apputil.Option[retryOptions] {
+func WithConstantBackoff(d time.Duration) RetryOption {
 	return func(rc *retryOptions) { rc.backoff = func(_ int) time.Duration { return d } }
 }
 
 // WithBackoffFunc sets a custom backoff strategy.
-func WithBackoffFunc(fn port.BackoffFunc) apputil.Option[retryOptions] {
+func WithBackoffFunc(fn port.BackoffFunc) RetryOption {
 	return func(rc *retryOptions) { rc.backoff = fn }
 }
 
@@ -58,12 +60,14 @@ type Retryer struct {
 	base retryOptions
 }
 
-func NewRetryer(opts ...apputil.Option[retryOptions]) *Retryer {
+func NewRetryer(opts ...RetryOption) *Retryer {
 	cfg := retryOptions{
 		maxRetries: 3,
 		backoff:    func(_ int) time.Duration { return 100 * time.Millisecond },
 	}
-	apputil.Apply(&cfg, opts...)
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	return &Retryer{base: cfg}
 }
 
