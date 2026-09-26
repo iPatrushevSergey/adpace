@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain"
 )
 
 type AdvertiserOption func(*Advertiser)
 
 type Advertiser struct {
-	AdvertiserID string
+	AdvertiserID uuid.UUID
 	Name         string
 	Country      string
 	CreatedAt    time.Time
@@ -18,7 +19,7 @@ type Advertiser struct {
 }
 
 func NewAdvertiser(
-	advertiserID string,
+	advertiserID uuid.UUID,
 	name, country string,
 	updatedAt time.Time,
 	opts ...AdvertiserOption,
