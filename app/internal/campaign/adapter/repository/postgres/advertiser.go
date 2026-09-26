@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/adapter/repository/postgres/converter"
@@ -29,16 +28,11 @@ func NewAdvertiserRepo(executor *postgres.Executor, retryer port.Retryer) *Adver
 	}
 }
 
-func (r *AdvertiserRepo) GetByID(ctx context.Context, advertiserID string) (entity.Advertiser, error) {
-	id, err := uuid.Parse(advertiserID)
-	if err != nil {
-		return entity.Advertiser{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *AdvertiserRepo) GetByID(ctx context.Context, advertiserID uuid.UUID) (entity.Advertiser, error) {
 	var m sqlcgen.Advertiser
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = sqlcgen.New(q).GetAdvertiserByID(ctx, id)
+		m, err = sqlcgen.New(q).GetAdvertiserByID(ctx, advertiserID)
 		return err
 	})
 	if err != nil {
@@ -50,16 +44,11 @@ func (r *AdvertiserRepo) GetByID(ctx context.Context, advertiserID string) (enti
 	return r.conv.ToEntityAdvertiser(m), nil
 }
 
-func (r *AdvertiserRepo) GetByIDForUpdate(ctx context.Context, advertiserID string) (entity.Advertiser, error) {
-	id, err := uuid.Parse(advertiserID)
-	if err != nil {
-		return entity.Advertiser{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *AdvertiserRepo) GetByIDForUpdate(ctx context.Context, advertiserID uuid.UUID) (entity.Advertiser, error) {
 	var m sqlcgen.Advertiser
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = sqlcgen.New(q).GetAdvertiserByIDForUpdate(ctx, id)
+		m, err = sqlcgen.New(q).GetAdvertiserByIDForUpdate(ctx, advertiserID)
 		return err
 	})
 	if err != nil {
@@ -72,13 +61,10 @@ func (r *AdvertiserRepo) GetByIDForUpdate(ctx context.Context, advertiserID stri
 }
 
 func (r *AdvertiserRepo) Create(ctx context.Context, advertiser entity.Advertiser) (entity.Advertiser, error) {
-	params, err := r.conv.ToCreateAdvertiserParams(advertiser)
-	if err != nil {
-		return entity.Advertiser{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
+	params := r.conv.ToCreateAdvertiserParams(advertiser)
 
 	var m sqlcgen.Advertiser
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
 		m, err = sqlcgen.New(q).CreateAdvertiser(ctx, params)
 		return err
@@ -90,10 +76,7 @@ func (r *AdvertiserRepo) Create(ctx context.Context, advertiser entity.Advertise
 }
 
 func (r *AdvertiserRepo) Save(ctx context.Context, advertiser entity.Advertiser) error {
-	params, err := r.conv.ToSaveAdvertiserParams(advertiser)
-	if err != nil {
-		return fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
+	params := r.conv.ToSaveAdvertiserParams(advertiser)
 
 	return r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		_, err := sqlcgen.New(q).SaveAdvertiser(ctx, params)
@@ -104,13 +87,8 @@ func (r *AdvertiserRepo) Save(ctx context.Context, advertiser entity.Advertiser)
 	})
 }
 
-func (r *AdvertiserRepo) Delete(ctx context.Context, advertiserID string) error {
-	id, err := uuid.Parse(advertiserID)
-	if err != nil {
-		return fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *AdvertiserRepo) Delete(ctx context.Context, advertiserID uuid.UUID) error {
 	return r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
-		return sqlcgen.New(q).DeleteAdvertiser(ctx, id)
+		return sqlcgen.New(q).DeleteAdvertiser(ctx, advertiserID)
 	})
 }
