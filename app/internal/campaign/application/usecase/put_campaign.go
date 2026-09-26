@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/dto"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain/entity"
@@ -21,7 +22,7 @@ func (uc *PutCampaign) Execute(ctx context.Context, in dto.PutCampaignInput) (st
 	// AdvertiserID intentionally not part of Put — ownership is immutable after Create.
 	campaign, err := entity.NewCampaign(
 		in.CampaignID,
-		"",
+		uuid.Nil,
 		in.Name,
 		in.BudgetTotal,
 		in.BudgetDaily,
