@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,16 +29,11 @@ func NewCampaignRepo(executor *postgres.Executor, retryer port.Retryer) *Campaig
 	}
 }
 
-func (r *CampaignRepo) GetByID(ctx context.Context, campaignID string) (entity.Campaign, error) {
-	id, err := uuid.Parse(campaignID)
-	if err != nil {
-		return entity.Campaign{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *CampaignRepo) GetByID(ctx context.Context, campaignID uuid.UUID) (entity.Campaign, error) {
 	var m sqlcgen.Campaign
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = sqlcgen.New(q).GetCampaignByID(ctx, id)
+		m, err = sqlcgen.New(q).GetCampaignByID(ctx, campaignID)
 		return err
 	})
 	if err != nil {
@@ -51,16 +45,11 @@ func (r *CampaignRepo) GetByID(ctx context.Context, campaignID string) (entity.C
 	return r.conv.ToEntityCampaign(m), nil
 }
 
-func (r *CampaignRepo) GetByIDForUpdate(ctx context.Context, campaignID string) (entity.Campaign, error) {
-	id, err := uuid.Parse(campaignID)
-	if err != nil {
-		return entity.Campaign{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *CampaignRepo) GetByIDForUpdate(ctx context.Context, campaignID uuid.UUID) (entity.Campaign, error) {
 	var m sqlcgen.Campaign
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
-		m, err = sqlcgen.New(q).GetCampaignByIDForUpdate(ctx, id)
+		m, err = sqlcgen.New(q).GetCampaignByIDForUpdate(ctx, campaignID)
 		return err
 	})
 	if err != nil {
@@ -73,13 +62,10 @@ func (r *CampaignRepo) GetByIDForUpdate(ctx context.Context, campaignID string) 
 }
 
 func (r *CampaignRepo) Create(ctx context.Context, campaign entity.Campaign) (entity.Campaign, error) {
-	params, err := r.conv.ToCreateCampaignParams(campaign)
-	if err != nil {
-		return entity.Campaign{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
+	params := r.conv.ToCreateCampaignParams(campaign)
 
 	var m sqlcgen.Campaign
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
 		m, err = sqlcgen.New(q).CreateCampaign(ctx, params)
 		return err
@@ -91,10 +77,7 @@ func (r *CampaignRepo) Create(ctx context.Context, campaign entity.Campaign) (en
 }
 
 func (r *CampaignRepo) Save(ctx context.Context, campaign entity.Campaign) error {
-	params, err := r.conv.ToSaveCampaignParams(campaign)
-	if err != nil {
-		return fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
+	params := r.conv.ToSaveCampaignParams(campaign)
 
 	return r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		_, err := sqlcgen.New(q).SaveCampaign(ctx, params)
@@ -105,17 +88,12 @@ func (r *CampaignRepo) Save(ctx context.Context, campaign entity.Campaign) error
 	})
 }
 
-func (r *CampaignRepo) Pause(ctx context.Context, campaignID, reason string, updatedAt time.Time) (entity.Campaign, error) {
-	id, err := uuid.Parse(campaignID)
-	if err != nil {
-		return entity.Campaign{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *CampaignRepo) Pause(ctx context.Context, campaignID uuid.UUID, reason string, updatedAt time.Time) (entity.Campaign, error) {
 	var m sqlcgen.Campaign
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
 		m, err = sqlcgen.New(q).PauseCampaign(ctx, sqlcgen.PauseCampaignParams{
-			CampaignID:  id,
+			CampaignID:  campaignID,
 			PauseReason: &reason,
 			UpdatedAt:   updatedAt,
 		})
@@ -130,17 +108,12 @@ func (r *CampaignRepo) Pause(ctx context.Context, campaignID, reason string, upd
 	return r.conv.ToEntityCampaign(m), nil
 }
 
-func (r *CampaignRepo) Resume(ctx context.Context, campaignID string, updatedAt time.Time) (entity.Campaign, error) {
-	id, err := uuid.Parse(campaignID)
-	if err != nil {
-		return entity.Campaign{}, fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *CampaignRepo) Resume(ctx context.Context, campaignID uuid.UUID, updatedAt time.Time) (entity.Campaign, error) {
 	var m sqlcgen.Campaign
-	err = r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
+	err := r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
 		var err error
 		m, err = sqlcgen.New(q).ResumeCampaign(ctx, sqlcgen.ResumeCampaignParams{
-			CampaignID: id,
+			CampaignID: campaignID,
 			UpdatedAt:  updatedAt,
 		})
 		return err
@@ -154,13 +127,8 @@ func (r *CampaignRepo) Resume(ctx context.Context, campaignID string, updatedAt 
 	return r.conv.ToEntityCampaign(m), nil
 }
 
-func (r *CampaignRepo) Delete(ctx context.Context, campaignID string) error {
-	id, err := uuid.Parse(campaignID)
-	if err != nil {
-		return fmt.Errorf("%w: %v", domain.ErrBadInput, err)
-	}
-
+func (r *CampaignRepo) Delete(ctx context.Context, campaignID uuid.UUID) error {
 	return r.executor.Do(ctx, r.retryer, func(q postgres.Querier) error {
-		return sqlcgen.New(q).DeleteCampaign(ctx, id)
+		return sqlcgen.New(q).DeleteCampaign(ctx, campaignID)
 	})
 }
