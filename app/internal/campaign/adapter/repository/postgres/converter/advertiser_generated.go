@@ -4,43 +4,43 @@
 package converter
 
 import (
+	uuid "github.com/google/uuid"
 	sqlcgen "github.com/iPatrushevSergey/adpace/app/internal/campaign/adapter/repository/postgres/sqlcgen"
 	entity "github.com/iPatrushevSergey/adpace/app/internal/campaign/domain/entity"
 )
 
 type AdvertiserConverterImpl struct{}
 
-func (c *AdvertiserConverterImpl) ToCreateAdvertiserParams(source entity.Advertiser) (sqlcgen.CreateAdvertiserParams, error) {
+func (c *AdvertiserConverterImpl) ToCreateAdvertiserParams(source entity.Advertiser) sqlcgen.CreateAdvertiserParams {
 	var sqlcgenCreateAdvertiserParams sqlcgen.CreateAdvertiserParams
-	uuidUUID, err := StringToUUID(source.AdvertiserID)
-	if err != nil {
-		return sqlcgenCreateAdvertiserParams, err
-	}
-	sqlcgenCreateAdvertiserParams.AdvertiserID = uuidUUID
+	sqlcgenCreateAdvertiserParams.AdvertiserID = c.uuidUUIDToUuidUUID(source.AdvertiserID)
 	sqlcgenCreateAdvertiserParams.Name = source.Name
 	sqlcgenCreateAdvertiserParams.Country = source.Country
 	sqlcgenCreateAdvertiserParams.CreatedAt = CopyTime(source.CreatedAt)
 	sqlcgenCreateAdvertiserParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenCreateAdvertiserParams, nil
+	return sqlcgenCreateAdvertiserParams
 }
 func (c *AdvertiserConverterImpl) ToEntityAdvertiser(source sqlcgen.Advertiser) entity.Advertiser {
 	var entityAdvertiser entity.Advertiser
-	entityAdvertiser.AdvertiserID = UUIDToString(source.AdvertiserID)
+	entityAdvertiser.AdvertiserID = c.uuidUUIDToUuidUUID(source.AdvertiserID)
 	entityAdvertiser.Name = source.Name
 	entityAdvertiser.Country = source.Country
 	entityAdvertiser.CreatedAt = CopyTime(source.CreatedAt)
 	entityAdvertiser.UpdatedAt = CopyTime(source.UpdatedAt)
 	return entityAdvertiser
 }
-func (c *AdvertiserConverterImpl) ToSaveAdvertiserParams(source entity.Advertiser) (sqlcgen.SaveAdvertiserParams, error) {
+func (c *AdvertiserConverterImpl) ToSaveAdvertiserParams(source entity.Advertiser) sqlcgen.SaveAdvertiserParams {
 	var sqlcgenSaveAdvertiserParams sqlcgen.SaveAdvertiserParams
-	uuidUUID, err := StringToUUID(source.AdvertiserID)
-	if err != nil {
-		return sqlcgenSaveAdvertiserParams, err
-	}
-	sqlcgenSaveAdvertiserParams.AdvertiserID = uuidUUID
+	sqlcgenSaveAdvertiserParams.AdvertiserID = c.uuidUUIDToUuidUUID(source.AdvertiserID)
 	sqlcgenSaveAdvertiserParams.Name = source.Name
 	sqlcgenSaveAdvertiserParams.Country = source.Country
 	sqlcgenSaveAdvertiserParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenSaveAdvertiserParams, nil
+	return sqlcgenSaveAdvertiserParams
+}
+func (c *AdvertiserConverterImpl) uuidUUIDToUuidUUID(source uuid.UUID) uuid.UUID {
+	var uuidUUID uuid.UUID
+	for i := 0; i < len(source); i++ {
+		uuidUUID[i] = source[i]
+	}
+	return uuidUUID
 }
