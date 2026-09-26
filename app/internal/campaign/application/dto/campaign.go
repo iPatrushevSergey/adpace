@@ -1,39 +1,41 @@
 package dto
 
+import "github.com/google/uuid"
+
 type CreateCampaignInput struct {
-	AdvertiserID string
+	AdvertiserID uuid.UUID
 	Name         string
 	BudgetTotal  int64
 	BudgetDaily  int64
 }
 
 type GetCampaignInput struct {
-	CampaignID string
+	CampaignID uuid.UUID
 }
 
 type PatchCampaignInput struct {
-	CampaignID  string
+	CampaignID  uuid.UUID
 	Name        *string
 	BudgetTotal *int64
 	BudgetDaily *int64
 }
 
 type PutCampaignInput struct {
-	CampaignID  string
+	CampaignID  uuid.UUID
 	Name        string
 	BudgetTotal int64
 	BudgetDaily int64
 }
 
 type DeleteCampaignInput struct {
-	CampaignID string
+	CampaignID uuid.UUID
 }
 
 type PauseCampaignInput struct {
-	CampaignID string
+	CampaignID uuid.UUID
 	Reason     string
 }
 
 type ResumeCampaignInput struct {
-	CampaignID string
+	CampaignID uuid.UUID
 }
