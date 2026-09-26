@@ -29,10 +29,16 @@ func (h *CampaignHandler) Create(c *gin.Context) {
 		return
 	}
 
+	advertiserID, err := uuid.Parse(req.AdvertiserID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
+		return
+	}
+
 	out, err := h.uc.Create.Execute(
 		c.Request.Context(),
 		appdto.CreateCampaignInput{
-			AdvertiserID: req.AdvertiserID,
+			AdvertiserID: advertiserID,
 			Name:         req.Name,
 			BudgetTotal:  req.BudgetTotal,
 			BudgetDaily:  req.BudgetDaily,
@@ -48,8 +54,8 @@ func (h *CampaignHandler) Create(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, presdto.CreateCampaignResponse{
-		ID:           out.CampaignID,
-		AdvertiserID: out.AdvertiserID,
+		ID:           out.CampaignID.String(),
+		AdvertiserID: out.AdvertiserID.String(),
 		Name:         out.Name,
 		BudgetTotal:  out.BudgetTotal,
 		BudgetDaily:  out.BudgetDaily,
@@ -72,15 +78,11 @@ func (h *CampaignHandler) Get(c *gin.Context) {
 	out, err := h.uc.Get.Execute(
 		c.Request.Context(),
 		appdto.GetCampaignInput{
-			CampaignID: id.String(),
+			CampaignID: id,
 		},
 	)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrBadInput):
-			c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
-			return
-		case errors.Is(err, domain.ErrNotFound):
+		if errors.Is(err, domain.ErrNotFound) {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
@@ -89,8 +91,8 @@ func (h *CampaignHandler) Get(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, presdto.GetCampaignResponse{
-		ID:           out.CampaignID,
-		AdvertiserID: out.AdvertiserID,
+		ID:           out.CampaignID.String(),
+		AdvertiserID: out.AdvertiserID.String(),
 		Name:         out.Name,
 		BudgetTotal:  out.BudgetTotal,
 		BudgetDaily:  out.BudgetDaily,
@@ -119,7 +121,7 @@ func (h *CampaignHandler) Patch(c *gin.Context) {
 	out, err := h.uc.Patch.Execute(
 		c.Request.Context(),
 		appdto.PatchCampaignInput{
-			CampaignID:  id.String(),
+			CampaignID:  id,
 			Name:        req.Name,
 			BudgetTotal: req.BudgetTotal,
 			BudgetDaily: req.BudgetDaily,
@@ -139,8 +141,8 @@ func (h *CampaignHandler) Patch(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, presdto.PatchCampaignResponse{
-		ID:           out.CampaignID,
-		AdvertiserID: out.AdvertiserID,
+		ID:           out.CampaignID.String(),
+		AdvertiserID: out.AdvertiserID.String(),
 		Name:         out.Name,
 		BudgetTotal:  out.BudgetTotal,
 		BudgetDaily:  out.BudgetDaily,
@@ -169,7 +171,7 @@ func (h *CampaignHandler) Put(c *gin.Context) {
 	_, err = h.uc.Put.Execute(
 		c.Request.Context(),
 		appdto.PutCampaignInput{
-			CampaignID:  id.String(),
+			CampaignID:  id,
 			Name:        req.Name,
 			BudgetTotal: req.BudgetTotal,
 			BudgetDaily: req.BudgetDaily,
@@ -201,15 +203,11 @@ func (h *CampaignHandler) Delete(c *gin.Context) {
 	_, err = h.uc.Delete.Execute(
 		c.Request.Context(),
 		appdto.DeleteCampaignInput{
-			CampaignID: id.String(),
+			CampaignID: id,
 		},
 	)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrBadInput):
-			c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
-			return
-		case errors.Is(err, domain.ErrNotFound):
+		if errors.Is(err, domain.ErrNotFound) {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
@@ -236,7 +234,7 @@ func (h *CampaignHandler) Pause(c *gin.Context) {
 	out, err := h.uc.Pause.Execute(
 		c.Request.Context(),
 		appdto.PauseCampaignInput{
-			CampaignID: id.String(),
+			CampaignID: id,
 			Reason:     req.Reason,
 		},
 	)
@@ -257,7 +255,7 @@ func (h *CampaignHandler) Pause(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, presdto.PauseCampaignResponse{
-		ID:          out.CampaignID,
+		ID:          out.CampaignID.String(),
 		Status:      out.Status,
 		PauseReason: out.PauseReason,
 		UpdatedAt:   out.UpdatedAt,
@@ -274,14 +272,11 @@ func (h *CampaignHandler) Resume(c *gin.Context) {
 	out, err := h.uc.Resume.Execute(
 		c.Request.Context(),
 		appdto.ResumeCampaignInput{
-			CampaignID: id.String(),
+			CampaignID: id,
 		},
 	)
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrBadInput):
-			c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
-			return
 		case errors.Is(err, domain.ErrNotFound):
 			c.AbortWithStatus(http.StatusNotFound)
 			return
@@ -294,7 +289,7 @@ func (h *CampaignHandler) Resume(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, presdto.ResumeCampaignResponse{
-		ID:        out.CampaignID,
+		ID:        out.CampaignID.String(),
 		Status:    out.Status,
 		UpdatedAt: out.UpdatedAt,
 	})
