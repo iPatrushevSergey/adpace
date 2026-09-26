@@ -46,7 +46,7 @@ func (h *AdvertiserHandler) Create(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, presdto.CreateAdvertiserResponse{
-		ID:        out.AdvertiserID,
+		ID:        out.AdvertiserID.String(),
 		Name:      out.Name,
 		Country:   out.Country,
 		CreatedAt: out.CreatedAt,
@@ -64,15 +64,11 @@ func (h *AdvertiserHandler) Get(c *gin.Context) {
 	out, err := h.uc.Get.Execute(
 		c.Request.Context(),
 		appdto.GetAdvertiserInput{
-			AdvertiserID: id.String(),
+			AdvertiserID: id,
 		},
 	)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrBadInput):
-			c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
-			return
-		case errors.Is(err, domain.ErrNotFound):
+		if errors.Is(err, domain.ErrNotFound) {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
@@ -81,7 +77,7 @@ func (h *AdvertiserHandler) Get(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, presdto.GetAdvertiserResponse{
-		ID:        out.AdvertiserID,
+		ID:        out.AdvertiserID.String(),
 		Name:      out.Name,
 		Country:   out.Country,
 		CreatedAt: out.CreatedAt,
@@ -105,7 +101,7 @@ func (h *AdvertiserHandler) Patch(c *gin.Context) {
 	out, err := h.uc.Patch.Execute(
 		c.Request.Context(),
 		appdto.PatchAdvertiserInput{
-			AdvertiserID: id.String(),
+			AdvertiserID: id,
 			Name:         req.Name,
 			Country:      req.Country,
 		},
@@ -124,7 +120,7 @@ func (h *AdvertiserHandler) Patch(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, presdto.PatchAdvertiserResponse{
-		ID:        out.AdvertiserID,
+		ID:        out.AdvertiserID.String(),
 		Name:      out.Name,
 		Country:   out.Country,
 		CreatedAt: out.CreatedAt,
@@ -148,7 +144,7 @@ func (h *AdvertiserHandler) Put(c *gin.Context) {
 	_, err = h.uc.Put.Execute(
 		c.Request.Context(),
 		appdto.PutAdvertiserInput{
-			AdvertiserID: id.String(),
+			AdvertiserID: id,
 			Name:         req.Name,
 			Country:      req.Country,
 		},
@@ -179,15 +175,11 @@ func (h *AdvertiserHandler) Delete(c *gin.Context) {
 	_, err = h.uc.Delete.Execute(
 		c.Request.Context(),
 		appdto.DeleteAdvertiserInput{
-			AdvertiserID: id.String(),
+			AdvertiserID: id,
 		},
 	)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrBadInput):
-			c.AbortWithStatusJSON(http.StatusBadRequest, presdto.ErrorResponse{Error: "bad input"})
-			return
-		case errors.Is(err, domain.ErrNotFound):
+		if errors.Is(err, domain.ErrNotFound) {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
