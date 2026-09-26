@@ -1,5 +1,7 @@
 package port
 
+import "github.com/google/uuid"
+
 type IDGenerator interface {
-	NewID() (string, error)
+	NewID() (uuid.UUID, error)
 }
