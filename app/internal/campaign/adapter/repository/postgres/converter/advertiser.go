@@ -9,12 +9,10 @@ import (
 
 // goverter:converter
 // goverter:output:file advertiser_generated.go
-// goverter:extend UUIDToString
-// goverter:extend StringToUUID
 // goverter:extend CopyTime
 // goverter:extend CopyTimePtr
 type AdvertiserConverter interface {
 	ToEntityAdvertiser(source sqlcgen.Advertiser) entity.Advertiser
-	ToCreateAdvertiserParams(source entity.Advertiser) (sqlcgen.CreateAdvertiserParams, error)
-	ToSaveAdvertiserParams(source entity.Advertiser) (sqlcgen.SaveAdvertiserParams, error)
+	ToCreateAdvertiserParams(source entity.Advertiser) sqlcgen.CreateAdvertiserParams
+	ToSaveAdvertiserParams(source entity.Advertiser) sqlcgen.SaveAdvertiserParams
 }
