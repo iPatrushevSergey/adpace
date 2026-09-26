@@ -9,11 +9,9 @@ import (
 
 // goverter:converter
 // goverter:output:file campaign_generated.go
-// goverter:extend UUIDToString
-// goverter:extend StringToUUID
 // goverter:extend CopyTime
 type CampaignConverter interface {
 	ToEntityCampaign(source sqlcgen.Campaign) entity.Campaign
-	ToCreateCampaignParams(source entity.Campaign) (sqlcgen.CreateCampaignParams, error)
-	ToSaveCampaignParams(source entity.Campaign) (sqlcgen.SaveCampaignParams, error)
+	ToCreateCampaignParams(source entity.Campaign) sqlcgen.CreateCampaignParams
+	ToSaveCampaignParams(source entity.Campaign) sqlcgen.SaveCampaignParams
 }
