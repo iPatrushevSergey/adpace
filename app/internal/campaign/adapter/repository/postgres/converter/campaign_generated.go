@@ -4,36 +4,29 @@
 package converter
 
 import (
+	uuid "github.com/google/uuid"
 	sqlcgen "github.com/iPatrushevSergey/adpace/app/internal/campaign/adapter/repository/postgres/sqlcgen"
 	entity "github.com/iPatrushevSergey/adpace/app/internal/campaign/domain/entity"
 )
 
 type CampaignConverterImpl struct{}
 
-func (c *CampaignConverterImpl) ToCreateCampaignParams(source entity.Campaign) (sqlcgen.CreateCampaignParams, error) {
+func (c *CampaignConverterImpl) ToCreateCampaignParams(source entity.Campaign) sqlcgen.CreateCampaignParams {
 	var sqlcgenCreateCampaignParams sqlcgen.CreateCampaignParams
-	uuidUUID, err := StringToUUID(source.CampaignID)
-	if err != nil {
-		return sqlcgenCreateCampaignParams, err
-	}
-	sqlcgenCreateCampaignParams.CampaignID = uuidUUID
-	uuidUUID2, err := StringToUUID(source.AdvertiserID)
-	if err != nil {
-		return sqlcgenCreateCampaignParams, err
-	}
-	sqlcgenCreateCampaignParams.AdvertiserID = uuidUUID2
+	sqlcgenCreateCampaignParams.CampaignID = c.uuidUUIDToUuidUUID(source.CampaignID)
+	sqlcgenCreateCampaignParams.AdvertiserID = c.uuidUUIDToUuidUUID(source.AdvertiserID)
 	sqlcgenCreateCampaignParams.Name = source.Name
 	sqlcgenCreateCampaignParams.BudgetTotal = source.BudgetTotal
 	sqlcgenCreateCampaignParams.BudgetDaily = source.BudgetDaily
 	sqlcgenCreateCampaignParams.Status = source.Status
 	sqlcgenCreateCampaignParams.CreatedAt = CopyTime(source.CreatedAt)
 	sqlcgenCreateCampaignParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenCreateCampaignParams, nil
+	return sqlcgenCreateCampaignParams
 }
 func (c *CampaignConverterImpl) ToEntityCampaign(source sqlcgen.Campaign) entity.Campaign {
 	var entityCampaign entity.Campaign
-	entityCampaign.CampaignID = UUIDToString(source.CampaignID)
-	entityCampaign.AdvertiserID = UUIDToString(source.AdvertiserID)
+	entityCampaign.CampaignID = c.uuidUUIDToUuidUUID(source.CampaignID)
+	entityCampaign.AdvertiserID = c.uuidUUIDToUuidUUID(source.AdvertiserID)
 	entityCampaign.Name = source.Name
 	entityCampaign.BudgetTotal = source.BudgetTotal
 	entityCampaign.BudgetDaily = source.BudgetDaily
@@ -49,16 +42,19 @@ func (c *CampaignConverterImpl) ToEntityCampaign(source sqlcgen.Campaign) entity
 	entityCampaign.UpdatedAt = CopyTime(source.UpdatedAt)
 	return entityCampaign
 }
-func (c *CampaignConverterImpl) ToSaveCampaignParams(source entity.Campaign) (sqlcgen.SaveCampaignParams, error) {
+func (c *CampaignConverterImpl) ToSaveCampaignParams(source entity.Campaign) sqlcgen.SaveCampaignParams {
 	var sqlcgenSaveCampaignParams sqlcgen.SaveCampaignParams
-	uuidUUID, err := StringToUUID(source.CampaignID)
-	if err != nil {
-		return sqlcgenSaveCampaignParams, err
-	}
-	sqlcgenSaveCampaignParams.CampaignID = uuidUUID
+	sqlcgenSaveCampaignParams.CampaignID = c.uuidUUIDToUuidUUID(source.CampaignID)
 	sqlcgenSaveCampaignParams.Name = source.Name
 	sqlcgenSaveCampaignParams.BudgetTotal = source.BudgetTotal
 	sqlcgenSaveCampaignParams.BudgetDaily = source.BudgetDaily
 	sqlcgenSaveCampaignParams.UpdatedAt = CopyTime(source.UpdatedAt)
-	return sqlcgenSaveCampaignParams, nil
+	return sqlcgenSaveCampaignParams
+}
+func (c *CampaignConverterImpl) uuidUUIDToUuidUUID(source uuid.UUID) uuid.UUID {
+	var uuidUUID uuid.UUID
+	for i := 0; i < len(source); i++ {
+		uuidUUID[i] = source[i]
+	}
+	return uuidUUID
 }
