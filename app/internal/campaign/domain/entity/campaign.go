@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/domain"
 )
 
@@ -19,8 +20,8 @@ const (
 type CampaignOption func(*Campaign)
 
 type Campaign struct {
-	CampaignID   string
-	AdvertiserID string
+	CampaignID   uuid.UUID
+	AdvertiserID uuid.UUID
 	Name         string
 	BudgetTotal  int64
 	BudgetDaily  int64
@@ -34,7 +35,8 @@ type Campaign struct {
 }
 
 func NewCampaign(
-	campaignID, advertiserID, name string,
+	campaignID, advertiserID uuid.UUID,
+	name string,
 	budgetTotal, budgetDaily int64,
 	updatedAt time.Time,
 	opts ...CampaignOption,
