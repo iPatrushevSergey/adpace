@@ -12,10 +12,15 @@ import (
 type PutCampaign struct {
 	campaignRepo port.CampaignRepo
 	clock        port.Clock
+	retryer      port.Retryer
 }
 
-func NewPutCampaign(campaignRepo port.CampaignRepo, clock port.Clock) *PutCampaign {
-	return &PutCampaign{campaignRepo: campaignRepo, clock: clock}
+func NewPutCampaign(
+	campaignRepo port.CampaignRepo,
+	clock port.Clock,
+	retryer port.Retryer,
+) *PutCampaign {
+	return &PutCampaign{campaignRepo: campaignRepo, clock: clock, retryer: retryer}
 }
 
 func (uc *PutCampaign) Execute(ctx context.Context, in dto.PutCampaignInput) (struct{}, error) {
@@ -32,7 +37,10 @@ func (uc *PutCampaign) Execute(ctx context.Context, in dto.PutCampaignInput) (st
 		return struct{}{}, err
 	}
 
-	if err := uc.campaignRepo.Save(ctx, campaign); err != nil {
+	err = uc.retryer.Do(ctx, func() error {
+		return uc.campaignRepo.Save(ctx, campaign)
+	})
+	if err != nil {
 		return struct{}{}, err
 	}
 	return struct{}{}, nil
