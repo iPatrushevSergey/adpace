@@ -36,25 +36,27 @@ func (uc *PatchAdvertiser) Execute(ctx context.Context, in dto.PatchAdvertiserIn
 		return entity.Advertiser{}, fmt.Errorf("%w: at least one field must be provided", domain.ErrBadInput)
 	}
 
-	err = uc.transactor.RunInTransaction(ctx, uc.retryer, func(ctx context.Context) error {
-		current, err := uc.advertiserRepo.GetByIDForUpdate(ctx, in.AdvertiserID)
-		if err != nil {
-			return err
-		}
+	err = uc.retryer.Do(ctx, func() error {
+		return uc.transactor.Do(ctx, func(ctx context.Context) error {
+			current, err := uc.advertiserRepo.GetByIDForUpdate(ctx, in.AdvertiserID)
+			if err != nil {
+				return err
+			}
 
-		if err := current.SetName(in.Name); err != nil {
-			return err
-		}
-		if err := current.SetCountry(in.Country); err != nil {
-			return err
-		}
-		current.UpdatedAt = uc.clock.Now()
+			if err := current.SetName(in.Name); err != nil {
+				return err
+			}
+			if err := current.SetCountry(in.Country); err != nil {
+				return err
+			}
+			current.UpdatedAt = uc.clock.Now()
 
-		if err := uc.advertiserRepo.Save(ctx, current); err != nil {
-			return err
-		}
-		out = current
-		return nil
+			if err := uc.advertiserRepo.Save(ctx, current); err != nil {
+				return err
+			}
+			out = current
+			return nil
+		})
 	})
 	if err != nil {
 		return entity.Advertiser{}, err
