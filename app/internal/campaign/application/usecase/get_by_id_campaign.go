@@ -10,12 +10,27 @@ import (
 
 type GetByIDCampaign struct {
 	campaignRepo port.CampaignRepo
+	retryer      port.Retryer
 }
 
-func NewGetByIDCampaign(campaignRepo port.CampaignRepo) *GetByIDCampaign {
-	return &GetByIDCampaign{campaignRepo: campaignRepo}
+func NewGetByIDCampaign(
+	campaignRepo port.CampaignRepo,
+	retryer port.Retryer,
+) *GetByIDCampaign {
+	return &GetByIDCampaign{
+		campaignRepo: campaignRepo,
+		retryer:      retryer,
+	}
 }
 
-func (uc *GetByIDCampaign) Execute(ctx context.Context, in dto.GetCampaignInput) (entity.Campaign, error) {
-	return uc.campaignRepo.GetByID(ctx, in.CampaignID)
+func (uc *GetByIDCampaign) Execute(ctx context.Context, in dto.GetCampaignInput) (out entity.Campaign, err error) {
+	err = uc.retryer.Do(ctx, func() error {
+		var err error
+		out, err = uc.campaignRepo.GetByID(ctx, in.CampaignID)
+		return err
+	})
+	if err != nil {
+		return entity.Campaign{}, err
+	}
+	return out, nil
 }
