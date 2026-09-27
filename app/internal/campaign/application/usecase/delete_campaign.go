@@ -9,14 +9,21 @@ import (
 
 type DeleteCampaign struct {
 	campaignRepo port.CampaignRepo
+	retryer      port.Retryer
 }
 
-func NewDeleteCampaign(campaignRepo port.CampaignRepo) *DeleteCampaign {
-	return &DeleteCampaign{campaignRepo: campaignRepo}
+func NewDeleteCampaign(
+	campaignRepo port.CampaignRepo,
+	retryer port.Retryer,
+) *DeleteCampaign {
+	return &DeleteCampaign{campaignRepo: campaignRepo, retryer: retryer}
 }
 
 func (uc *DeleteCampaign) Execute(ctx context.Context, in dto.DeleteCampaignInput) (struct{}, error) {
-	if err := uc.campaignRepo.Delete(ctx, in.CampaignID); err != nil {
+	err := uc.retryer.Do(ctx, func() error {
+		return uc.campaignRepo.Delete(ctx, in.CampaignID)
+	})
+	if err != nil {
 		return struct{}{}, err
 	}
 	return struct{}{}, nil
