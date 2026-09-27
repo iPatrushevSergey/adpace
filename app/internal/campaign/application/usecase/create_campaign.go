@@ -12,21 +12,24 @@ type CreateCampaign struct {
 	campaignRepo port.CampaignRepo
 	idGenerator  port.IDGenerator
 	clock        port.Clock
+	retryer      port.Retryer
 }
 
 func NewCreateCampaign(
 	campaignRepo port.CampaignRepo,
 	idGenerator port.IDGenerator,
 	clock port.Clock,
+	retryer port.Retryer,
 ) *CreateCampaign {
 	return &CreateCampaign{
 		campaignRepo: campaignRepo,
 		idGenerator:  idGenerator,
 		clock:        clock,
+		retryer:      retryer,
 	}
 }
 
-func (uc *CreateCampaign) Execute(ctx context.Context, in dto.CreateCampaignInput) (entity.Campaign, error) {
+func (uc *CreateCampaign) Execute(ctx context.Context, in dto.CreateCampaignInput) (out entity.Campaign, err error) {
 	id, err := uc.idGenerator.NewID()
 	if err != nil {
 		return entity.Campaign{}, err
@@ -46,9 +49,13 @@ func (uc *CreateCampaign) Execute(ctx context.Context, in dto.CreateCampaignInpu
 		return entity.Campaign{}, err
 	}
 
-	created, err := uc.campaignRepo.Create(ctx, campaign)
+	err = uc.retryer.Do(ctx, func() error {
+		var err error
+		out, err = uc.campaignRepo.Create(ctx, campaign)
+		return err
+	})
 	if err != nil {
 		return entity.Campaign{}, err
 	}
-	return created, nil
+	return out, nil
 }
