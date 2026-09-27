@@ -11,15 +11,18 @@ import (
 type PutAdvertiser struct {
 	advertiserRepo port.AdvertiserRepo
 	clock          port.Clock
+	retryer        port.Retryer
 }
 
 func NewPutAdvertiser(
 	advertiserRepo port.AdvertiserRepo,
 	clock port.Clock,
+	retryer port.Retryer,
 ) *PutAdvertiser {
 	return &PutAdvertiser{
 		advertiserRepo: advertiserRepo,
 		clock:          clock,
+		retryer:        retryer,
 	}
 }
 
@@ -29,7 +32,10 @@ func (uc *PutAdvertiser) Execute(ctx context.Context, in dto.PutAdvertiserInput)
 		return struct{}{}, err
 	}
 
-	if err := uc.advertiserRepo.Save(ctx, advertiser); err != nil {
+	err = uc.retryer.Do(ctx, func() error {
+		return uc.advertiserRepo.Save(ctx, advertiser)
+	})
+	if err != nil {
 		return struct{}{}, err
 	}
 	return struct{}{}, nil
