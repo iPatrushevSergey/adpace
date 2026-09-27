@@ -6,14 +6,17 @@ import (
 	"fmt"
 	"net/http"
 
+	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/adapter/clock"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/adapter/generator"
 	campaignpostgres "github.com/iPatrushevSergey/adpace/app/internal/campaign/adapter/repository/postgres"
+	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/port"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/application/usecase"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/config"
 	"github.com/iPatrushevSergey/adpace/app/internal/campaign/presentation/http/router"
 	"github.com/iPatrushevSergey/adpace/app/internal/pkg/adapter/logger"
 	"github.com/iPatrushevSergey/adpace/app/internal/pkg/adapter/repository/postgres"
+	"github.com/iPatrushevSergey/adpace/app/internal/pkg/adapter/retry"
 	"github.com/spf13/pflag"
 )
 
@@ -46,33 +49,33 @@ func Run() (*App, []func(), error) {
 	log.Info(context.Background(), "database connected")
 
 	transactor := postgres.NewTransactor(pool)
-	executor := postgres.NewExecutor(pool)
-	retryer := postgres.NewRetryer(
-		postgres.WithMaxRetries(cfg.DBRetry.MaxRetries),
-		postgres.WithExponentialBackoff(cfg.DBRetry.BaseDelay, cfg.DBRetry.MaxDelay),
+	retryer := retry.NewRetryer(
+		port.WithAttempts(cfg.DBRetry.Attempts),
+		port.WithBackoffFunc(retry.ExponentialBackoff(cfg.DBRetry.BaseDelay, cfg.DBRetry.MaxDelay)),
 	)
 
-	advertiserRepo := campaignpostgres.NewAdvertiserRepo(executor, retryer)
-	campaignRepo := campaignpostgres.NewCampaignRepo(executor, retryer)
+	getter := trmpgx.DefaultCtxGetter
+	advertiserRepo := campaignpostgres.NewAdvertiserRepo(pool, getter)
+	campaignRepo := campaignpostgres.NewCampaignRepo(pool, getter)
 	idGen := generator.NewIDGenerator()
 	clk := clock.NewRealClock()
 
 	advUC := usecase.AdvertiserUseCases{
-		Create: usecase.NewCreateAdvertiser(advertiserRepo, idGen, clk),
-		Get:    usecase.NewGetByIDAdvertiser(advertiserRepo),
+		Create: usecase.NewCreateAdvertiser(advertiserRepo, idGen, clk, retryer),
+		Get:    usecase.NewGetByIDAdvertiser(advertiserRepo, retryer),
 		Patch:  usecase.NewPatchAdvertiser(advertiserRepo, transactor, retryer, clk),
-		Put:    usecase.NewPutAdvertiser(advertiserRepo, clk),
-		Delete: usecase.NewDeleteAdvertiser(advertiserRepo),
+		Put:    usecase.NewPutAdvertiser(advertiserRepo, clk, retryer),
+		Delete: usecase.NewDeleteAdvertiser(advertiserRepo, retryer),
 	}
 
 	campUC := usecase.CampaignUseCases{
-		Create: usecase.NewCreateCampaign(campaignRepo, idGen, clk),
-		Get:    usecase.NewGetByIDCampaign(campaignRepo),
+		Create: usecase.NewCreateCampaign(campaignRepo, idGen, clk, retryer),
+		Get:    usecase.NewGetByIDCampaign(campaignRepo, retryer),
 		Patch:  usecase.NewPatchCampaign(campaignRepo, transactor, retryer, clk),
-		Put:    usecase.NewPutCampaign(campaignRepo, clk),
-		Delete: usecase.NewDeleteCampaign(campaignRepo),
-		Pause:  usecase.NewPauseCampaign(campaignRepo, clk),
-		Resume: usecase.NewResumeCampaign(campaignRepo, clk),
+		Put:    usecase.NewPutCampaign(campaignRepo, clk, retryer),
+		Delete: usecase.NewDeleteCampaign(campaignRepo, retryer),
+		Pause:  usecase.NewPauseCampaign(campaignRepo, clk, retryer),
+		Resume: usecase.NewResumeCampaign(campaignRepo, clk, retryer),
 	}
 
 	r := router.New(advUC, campUC, log)
