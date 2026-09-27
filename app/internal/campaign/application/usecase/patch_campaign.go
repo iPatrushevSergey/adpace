@@ -36,26 +36,29 @@ func (uc *PatchCampaign) Execute(ctx context.Context, in dto.PatchCampaignInput)
 		return entity.Campaign{}, fmt.Errorf("%w: at least one field must be provided", domain.ErrBadInput)
 	}
 
-	err = uc.transactor.RunInTransaction(ctx, uc.retryer, func(ctx context.Context) error {
-		current, err := uc.campaignRepo.GetByIDForUpdate(ctx, in.CampaignID)
-		if err != nil {
-			return err
-		}
+	err = uc.retryer.Do(ctx, func() error {
+		return uc.transactor.Do(ctx, func(ctx context.Context) error {
+			current, err := uc.campaignRepo.GetByIDForUpdate(ctx, in.CampaignID)
+			if err != nil {
+				return err
+			}
 
-		if err := current.SetName(in.Name); err != nil {
-			return err
-		}
-		if err := current.SetBudgets(in.BudgetTotal, in.BudgetDaily); err != nil {
-			return err
-		}
-		current.UpdatedAt = uc.clock.Now()
+			if err := current.SetName(in.Name); err != nil {
+				return err
+			}
+			if err := current.SetBudgets(in.BudgetTotal, in.BudgetDaily); err != nil {
+				return err
+			}
+			current.UpdatedAt = uc.clock.Now()
 
-		if err := uc.campaignRepo.Save(ctx, current); err != nil {
-			return err
-		}
-		out = current
-		return nil
+			if err := uc.campaignRepo.Save(ctx, current); err != nil {
+				return err
+			}
+			out = current
+			return nil
+		})
 	})
+
 	if err != nil {
 		return entity.Campaign{}, err
 	}
