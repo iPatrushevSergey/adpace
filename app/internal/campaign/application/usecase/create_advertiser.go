@@ -12,17 +12,20 @@ type CreateAdvertiser struct {
 	advertiserRepo port.AdvertiserRepo
 	idGenerator    port.IDGenerator
 	clock          port.Clock
+	retryer        port.Retryer
 }
 
 func NewCreateAdvertiser(
 	advertiserRepo port.AdvertiserRepo,
 	idGenerator port.IDGenerator,
 	clock port.Clock,
+	retryer port.Retryer,
 ) *CreateAdvertiser {
 	return &CreateAdvertiser{
 		advertiserRepo: advertiserRepo,
 		idGenerator:    idGenerator,
 		clock:          clock,
+		retryer:        retryer,
 	}
 }
 
@@ -38,9 +41,13 @@ func (uc *CreateAdvertiser) Execute(ctx context.Context, in dto.CreateAdvertiser
 		return entity.Advertiser{}, err
 	}
 
-	created, err := uc.advertiserRepo.Create(ctx, advertiser)
+	err = uc.retryer.Do(ctx, func() error {
+		var err error
+		out, err = uc.advertiserRepo.Create(ctx, advertiser)
+		return err
+	})
 	if err != nil {
 		return entity.Advertiser{}, err
 	}
-	return created, nil
+	return out, nil
 }
