@@ -1,5 +1,7 @@
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
+github.com/avast/retry-go/v4 v4.7.0 h1:yjDs35SlGvKwRNSykujfjdMxMhMQQM0TnIjJaHB+Zio=
+github.com/avast/retry-go/v4 v4.7.0/go.mod h1:ZMPDa3sY2bKgpLtap9JRUgk2yTAba7cgiFhqxY2Sg6Q=
 github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2 v2.0.4 h1:DEAJA4EdlSivkSR01SdSbmX9r8TJcm6CUI6h5WxrfWM=
 github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2 v2.0.4/go.mod h1:O+bq9veJwpjhOYy6DSys82p6AP5KadYWZbm1sLipOl0=
 github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.4 h1:daGzBTvx5geGeJwu8i0xgpXo3sfY/NfOhOB3qxZwj+I=
